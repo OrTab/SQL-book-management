@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, send_from_directory
+from flask import Blueprint, render_template, send_from_directory, redirect
 from services.books_service import get_books_from_db
 
 bp = Blueprint("index", __name__)
@@ -11,8 +11,10 @@ def index():
 
 @bp.route("/books")
 def get_books_page():
+    # if not authenticated
+    if 1 == 1:
+        return redirect("/login")
     books = get_books_from_db()
-    print(books)
     return render_template("books.html", books=books)
 
 
