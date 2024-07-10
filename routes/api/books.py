@@ -12,6 +12,7 @@ def authenticate_user():
 @bp.route("/")
 def get_books():
     try:
-        return get_books_from_db()
+        books = get_books_from_db()
+        return books
     except DatabaseOperationError as error:
         return {"error": "Something went wrong"}, error.status_code
