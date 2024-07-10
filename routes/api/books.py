@@ -1,5 +1,5 @@
 from flask import Blueprint
-from services.books_service import get_books_from_db
+from services.books_service import get_books_from_db, DatabaseOperationError
 
 bp = Blueprint("books", __name__)
 
@@ -11,4 +11,7 @@ def authenticate_user():
 
 @bp.route("/")
 def get_books():
-    return get_books_from_db()
+    try:
+        return get_books_from_db()
+    except DatabaseOperationError as error:
+        return {"error": "Something went wrong"}, error.status_code

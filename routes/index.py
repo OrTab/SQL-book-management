@@ -12,10 +12,15 @@ def index():
 @bp.route("/books")
 def get_books_page():
     # if not authenticated
-    if 1 == 1:
-        return redirect("/login")
-    books = get_books_from_db()
-    return render_template("books.html", books=books)
+    if 1 != 1:
+        return redirect("/login", 307)
+    try:
+        query = "SELECT * FROM books"
+        books = db_operation(query)
+        return render_template("books.html", books=books)
+    except Exception as error:
+        print(error)
+        return redirect("/", 307)
 
 
 @bp.route("/login")

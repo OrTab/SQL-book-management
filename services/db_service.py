@@ -4,6 +4,14 @@ from config import db_name, password, host, user
 mysql_connector = mysql.connector
 
 
+class DatabaseOperationError(Exception):
+    def __init__(self, message, status_code=500):
+        super().__init__(message)
+        self.type = "db_operation_error"
+        self.message = message
+        self.status_code = status_code
+
+
 class MySQLConnection:
     def __enter__(self):
         global mysql_connector
@@ -37,7 +45,7 @@ def db_operation(query, params={}):
             return response
     except mysql_connector.Error as error:
         error_message = f"MySQL Error: {error.msg}"
-        return {"error": error_message}, 500
+        raise DatabaseOperationError(error_message, 500)
     except Exception as error:
         error_message = f"Error running operation on database: {str(error)}"
-        return {"error": error_message}, 500
+        raise DatabaseOperationError(error_message, 500)
