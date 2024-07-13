@@ -55,7 +55,6 @@ def db_operation(query, params=None):
     except mysql.connector.Error as error:
         error_message = f"MySQL Error: {error.msg}"
         error_type_entity = mysql_error_mapping.get(error.errno, DatabaseOperationError)
-        print("error_type_entity", error_type_entity)
         raise error_type_entity(error_message)
     except Exception as error:
         error_message = f"Error running operation on database: {str(error)}"

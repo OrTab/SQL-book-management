@@ -1,6 +1,11 @@
 from config import hash_key
 
 
+def validate_username_password_existence(username, password):
+    if not username or not password:
+        raise ValueError("Username or password cannot be empty.")
+
+
 def encrypt_decrypt_password(password):
     _password = ""
     for i, char in enumerate(password):
