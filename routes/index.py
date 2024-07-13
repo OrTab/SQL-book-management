@@ -27,6 +27,11 @@ def get_login_page():
     return render_template("login.html")
 
 
+@bp.route("/signup")
+def get_signup_page():
+    return render_template("signup.html")
+
+
 @bp.route("/<path:filename>")
 def serve_file(filename):
     return send_from_directory("static", filename)

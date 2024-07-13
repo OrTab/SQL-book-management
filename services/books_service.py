@@ -4,6 +4,6 @@ from services.db_service import db_operation, DatabaseOperationError
 def get_books_from_db():
     try:
         query = "SELECT * FROM books"
-        return db_operation(query)
+        return db_operation(query, {"should_fetch": True})
     except Exception as error:
         raise error
