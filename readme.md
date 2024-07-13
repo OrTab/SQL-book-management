@@ -22,8 +22,7 @@ This project implements a book management system using Python Flask for the back
 1. **Clone the repository:**
 
    ```bash
-   git clone <repository_url>
-   cd <project_directory>
+   git clone https://github.com/OrTab/SQL-book-management.git
    ```
 
 2. **Setup virtual environment (optional but recommended)**
