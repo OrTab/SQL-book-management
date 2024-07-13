@@ -46,7 +46,7 @@ def db_operation(query, params=None):
                 cursor.execute(query)
 
             if query.strip().startswith(("INSERT", "UPDATE", "DELETE")):
-                cnx.commit()
+                db.commit()
 
             if query.strip().startswith("SELECT"):
                 results = cursor.fetchall()
