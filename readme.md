@@ -2,11 +2,12 @@
 
 ## Project Overview
 
-This project implements a simple book management system using Python Flask for the backend and MySQL for database storage. The system allows users to perform basic CRUD operations (Create, Read, Update, Delete) on books stored in the database. It provides a RESTful API for interacting with the book data.
+This project implements a book management system using Python Flask for the backend and MySQL for database storage. The system allows users to perform basic CRUD operations (Create, Read, Update, Delete) on books stored in the database. It also includes user authentication to secure access to the system.
 
 ## Features
 
 - **CRUD Operations**: Allows users to add new books, view existing books, update book details, and delete books from the database.
+- **User Authentication**: Secure access to the system with user login and session management.
 - **Persistence**: Stores book information securely in a MySQL database.
 - **Scalability**: Designed to handle a growing library of books efficiently.
 
@@ -51,7 +52,8 @@ This project implements a simple book management system using Python Flask for t
 
 ## Future Enhancements
 
-**1. User Authentication: Implement authentication to secure access to CRUD operations.**
-**2. Filtering Options: Add filtering capabilities to search and sort books based on various attributes such as genre, author, publication date, etc.**
+### Filtering Options
+
+**Enhance the system with filtering capabilities to allow users to search and sort books based on various attributes**
 
 **These features are planned enhancements for the project to improve security and usability, providing more control and flexibility in managing book data.**
