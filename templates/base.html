@@ -20,6 +20,13 @@
           <li><a href="/signup">Signup</a></li>
         </ul>
       </nav>
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <div>
+        {% for message in messages %}
+        <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
     </header>
 
     <main>{% block content %}{% endblock %}</main>

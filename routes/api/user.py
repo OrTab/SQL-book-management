@@ -1,5 +1,9 @@
-from flask import Blueprint, request
-from services.db_service import db_operation
+from flask import Blueprint, request, redirect, flash
+from services.db_service import (
+    db_operation,
+    DatabaseOperationError,
+    DatabaseDuplicationEntryError,
+)
 from services.users_service import encrypt_decrypt_password
 
 bp = Blueprint("user", __name__)
@@ -23,16 +27,14 @@ def create_user():
     password = encrypt_decrypt_password(password)
     user_data = (username, password)
     try:
-        query = "SELECT COUNT(*) AS user_count FROM users WHERE username = %s AND password = %s"
-        response = db_operation(query, {"should_fetch": True}, user_data)
-        user_count = response[0]["user_count"]
-        if user_count == 0:
-            query = "INSERT INTO users (id, username, password, created_at) VALUES (UUID(), %s, %s, CURRENT_TIMESTAMP)"
-            db_operation(query, {"should_commit": True}, user_data)
-            print("user created successfully")
-        else:
-            print("user exist lets return login page with message")
-    except Exception as error:
-        print(error)
-
-    return user_data
+        query = "INSERT INTO users (id, username, password, created_at) VALUES (UUID(), %s, %s, CURRENT_TIMESTAMP)"
+        db_operation(query, user_data)
+        flash("user created successfully")
+        return redirect("/signup")
+    except DatabaseDuplicationEntryError:
+        flash("Username or email already exists. Please login.")
+        return redirect("/login")
+    except DatabaseOperationError as error:
+        if error.mysql_error_type == "duplicate_entry":
+            flash("Username or email already exists. Please login.")
+            return redirect("/login")

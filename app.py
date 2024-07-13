@@ -1,9 +1,10 @@
 from flask import Flask, render_template, send_from_directory
 from routes import index
 from routes.api import auth, books, user
-from config import api_prefix, port, host
+from config import api_prefix, port, host, hash_key
 
 app = Flask(__name__)
+app.secret_key = hash_key
 
 # main routes
 app.register_blueprint(index.bp)
