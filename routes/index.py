@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, send_from_directory, redirect
+from flask import Blueprint, render_template, send_from_directory, redirect, request
 from services.books_service import get_books_from_db
 
 bp = Blueprint("index", __name__)
@@ -10,10 +10,10 @@ def index():
 
 
 @bp.route("/books")
-def get_books_page():
+def books():
     # if not authenticated
     if False:
-        return redirect("/login", 307)
+        raise Exception("No user")
     try:
         books = get_books_from_db()
         return render_template("books.html", books=books)
@@ -23,12 +23,13 @@ def get_books_page():
 
 
 @bp.route("/login")
-def get_login_page():
-    return render_template("login.html")
+def login():
+    username = request.args.get("username")
+    return render_template("login.html", username=username)
 
 
 @bp.route("/signup")
-def get_signup_page():
+def signup():
     return render_template("signup.html")
 
 
