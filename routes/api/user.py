@@ -17,6 +17,21 @@ def authenticate_user():
     return None
 
 
+@bp.route("/load_test")
+def load_test():
+    try:
+        username = request.args.get("username")
+        query = "SELECT * FROM users WHERE username = %s"
+        response = db_operation(query, (username,))
+        user = response[0] if response else None
+        if user:
+            return f"found {username}"
+        else:
+            return "not found"
+    except DatabaseOperationError as error:
+        return error.message, error.status_code
+
+
 @bp.route("/login", methods=["POST"])
 def login():
     try:
