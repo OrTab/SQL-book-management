@@ -1,5 +1,7 @@
 import http.client
 import threading
+import sys
+import os
 from config import host, port
 
 
@@ -16,13 +18,13 @@ def check_user_existence():
         conn.close()
 
 
-num_requests = 200
+def run_load_test():
+    num_requests = 200
+    threads = []
+    for _ in range(num_requests):
+        thread = threading.Thread(target=check_user_existence)
+        threads.append(thread)
+        thread.start()
 
-threads = []
-for _ in range(num_requests):
-    thread = threading.Thread(target=check_user_existence)
-    threads.append(thread)
-    thread.start()
-
-for thread in threads:
-    thread.join()
+    for thread in threads:
+        thread.join()
