@@ -1,3 +1,4 @@
+from flask import redirect, url_for, flash
 from config import hash_key
 from functools import wraps
 
@@ -5,9 +6,10 @@ from functools import wraps
 def requires_authentication(func):
     @wraps(func)
     def authenticated_function(*args, **kwargs):
-        # need to implement
+        # need to implement is authenticated
         if False:
-            return {"error": "Unauthorized"}, 401
+            flash("Must login", category="message")
+            return redirect(url_for("index.login"))
         return func(*args, **kwargs)
 
     return authenticated_function
