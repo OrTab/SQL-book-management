@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% block title %}Login - Library Management System{%
 endblock %} {% block content %}
 <h1>Signup</h1>
-<form action="/api/user/signup" method="post">
+<form action="/api/auth/signup" method="post">
   <input type="text" name="username" id="username" />
   <input type="password" name="password" id="password" />
   <button type="submit">Submit</button>
