@@ -14,11 +14,6 @@ from services.users_service import (
 )
 
 
-@bp.before_request
-def authenticate_user():
-    return None
-
-
 @bp.route("/login", methods=["POST"])
 def login():
     try:

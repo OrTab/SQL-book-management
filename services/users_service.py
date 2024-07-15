@@ -1,4 +1,16 @@
 from config import hash_key
+from functools import wraps
+
+
+def requires_authentication(func):
+    @wraps(func)
+    def authenticated_function(*args, **kwargs):
+        # need to implement
+        if False:
+            return {"error": "Unauthorized"}, 401
+        return func(*args, **kwargs)
+
+    return authenticated_function
 
 
 def validate_username_password_existence(username, password):
