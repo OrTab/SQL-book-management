@@ -34,7 +34,7 @@ class MySQLConnection:
             self.db_connection.close()
 
 
-def db_operation(query, params=None):
+def db_operation(query, params=None, should_fetch_one=False):
     try:
         with MySQLConnection() as config:
             if isinstance(config, str):
@@ -51,7 +51,10 @@ def db_operation(query, params=None):
                 db_connection.commit()
 
             if query.strip().startswith("SELECT"):
-                results = cursor.fetchall()
+                if should_fetch_one:
+                    results = cursor.fetchone()
+                else:
+                    results = cursor.fetchall()
                 return results
     except mysql.connector.Error as error:
         error_message = f"MySQL Error: {error.msg}"

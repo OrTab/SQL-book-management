@@ -1,7 +1,7 @@
 from flask import Blueprint
 
 bp = Blueprint("api", __name__)
-
+from config import login_token_cookie_name
 from flask import Blueprint, request, redirect, flash, render_template, url_for
 from services.db_service import (
     db_operation,
@@ -10,21 +10,24 @@ from services.db_service import (
 )
 from services.users_service import (
     encrypt_decrypt_password,
-    validate_username_password_existence,
+    validate_username_password_existence,is_authenticated
 )
 
 
 @bp.route("/login", methods=["POST"])
 def login():
     try:
+        if(is_authenticated()):
+            return {"message":"already logged in"}
+
         form_data = request.form
         username = form_data.get("username")
         password = form_data.get("password")
         validate_username_password_existence(username, password)
 
         query = "SELECT * FROM users WHERE username = %s"
-        response = db_operation(query, (username,))
-        user = response[0] if response else None
+        user_response = db_operation(query, (username,))
+        user = user_response[0] if user_response else None
         if not user:
             raise ValueError("Incorrect username or password.")
 
@@ -32,16 +35,37 @@ def login():
         if decrypted_password != password:
             raise ValueError("Incorrect username or password.")
 
-        flash(f"Hey {username}, welcome back", category="message")
-        return redirect("/books")
+        query = """INSERT INTO tokens (id, token, user_id, expiration)
+                    VALUES (UUID(), UUID(), %s, DATE_ADD(NOW(), INTERVAL 1 MONTH))
+                """
+        db_operation(query, (user["id"],))
+        query = """
+            SELECT id, token, expiration
+            FROM tokens
+            WHERE user_id = %s
+        """
+        token_response = db_operation(query, (user["id"],), True)
+        flash(f"Hey {user["username"]}, welcome back", category="message")
+        response = redirect("/books")
+        response.set_cookie(
+            login_token_cookie_name,
+            token_response["token"],
+            expires=token_response["expiration"],
+            httponly=True,
+        )
+        return response
 
     except ValueError as error:
         flash(str(error), category="error")
         return render_template("login.html", username=username)
+    except DatabaseDuplicationEntryError as error:
+        flash("An error occurred. Please try again later.", category="error")
+        print(f"Should handle deletion of token row and create new , error: {error}")
+        return render_template("login.html", username=username)
     except Exception as error:
         flash("An error occurred. Please try again later.", category="error")
         print(f"Error during login: {error}")
-        return render_template("login.html")
+        return render_template("login.html", username=username)
 
 
 @bp.route("/signup", methods=["POST"])
