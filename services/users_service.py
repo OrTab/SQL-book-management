@@ -4,6 +4,7 @@ from functools import wraps
 
 
 def is_authenticated():
+    # needs to implement verification of token infront of db
     auth_token = request.cookies.get(login_token_cookie_name)
     return auth_token is not None
 
@@ -11,7 +12,6 @@ def is_authenticated():
 def requires_authentication(func):
     @wraps(func)
     def authenticated_function(*args, **kwargs):
-        # need to implement is authenticated
         if not is_authenticated():
             flash("Must login first", category="message")
             return redirect(url_for("index.login"))
