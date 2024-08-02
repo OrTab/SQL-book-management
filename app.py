@@ -8,12 +8,17 @@ from config import (
     hash_key,
 )
 from services.tokens_service import remove_token_from_cookie
+from services.users_service import is_authenticated, get_user_by_token
 
 app = Flask(__name__)
 
 
 @app.before_request
 def handle_before_request():
+    if is_authenticated():
+        user = get_user_by_token(g.auth_token)
+        if user:
+            g.user = user
     g.should_remove_auth_token_cookie = False
 
 
@@ -22,6 +27,12 @@ def handle_after_request(response):
     if g.should_remove_auth_token_cookie:
         response = remove_token_from_cookie(response)
     return response
+
+
+@app.context_processor
+def inject_user():
+    user = g.user if hasattr(g, "user") else None
+    return dict(user=user)
 
 
 app.secret_key = hash_key
