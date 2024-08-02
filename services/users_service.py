@@ -1,6 +1,7 @@
 from flask import redirect, url_for, flash, request
 from config import hash_key, login_token_cookie_name
 from functools import wraps
+from error_entities.empty_username_password_error import EmptyUsernamePassword
 
 
 def is_authenticated():
@@ -22,7 +23,7 @@ def requires_authentication(func):
 
 def validate_username_password_existence(username, password):
     if not username or not password:
-        raise ValueError("Username or password cannot be empty.")
+        raise EmptyUsernamePassword()
 
 
 def encrypt_decrypt_password(password):

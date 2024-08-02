@@ -3,11 +3,11 @@ from flask import Blueprint
 bp = Blueprint("api", __name__)
 from config import login_token_cookie_name
 from flask import Blueprint, request, redirect, flash, render_template, url_for
-from services.db_service import (
-    db_operation,
-    DatabaseOperationError,
-    DatabaseDuplicationEntryError,
-)
+from services.db_service import db_operation
+from error_entities.database_duplication_entry_error import DatabaseDuplicationEntryError
+from error_entities.database_operation_error import DatabaseOperationError
+from error_entities.incorrect_username_password_error import IncorrectUsernamePassword
+from error_entities.empty_username_password_error import EmptyUsernamePassword
 from services.users_service import (
     encrypt_decrypt_password,
     validate_username_password_existence,is_authenticated
@@ -18,7 +18,7 @@ from services.users_service import (
 def login():
     try:
         if(is_authenticated()):
-            return {"message":"already logged in"}
+            return { "message" :"already logged in" } 
 
         form_data = request.form
         username = form_data.get("username")
@@ -29,11 +29,11 @@ def login():
         user_response = db_operation(query, (username,))
         user = user_response[0] if user_response else None
         if not user:
-            raise ValueError("Incorrect username or password.")
+            raise IncorrectUsernamePassword()
 
         decrypted_password = encrypt_decrypt_password(user["password"])
         if decrypted_password != password:
-            raise ValueError("Incorrect username or password.")
+            raise IncorrectUsernamePassword()
 
         query = """INSERT INTO tokens (id, token, user_id, expiration)
                     VALUES (UUID(), UUID(), %s, DATE_ADD(NOW(), INTERVAL 1 MONTH))
@@ -55,17 +55,14 @@ def login():
         )
         return response
 
-    except ValueError as error:
+    except (IncorrectUsernamePassword , EmptyUsernamePassword)as error:
         flash(str(error), category="error")
-        return render_template("login.html", username=username)
-    except DatabaseDuplicationEntryError as error:
+        return redirect(url_for("index.login", username=username))
+    except (DatabaseDuplicationEntryError, Exception) as error:
         flash("An error occurred. Please try again later.", category="error")
-        print(f"Should handle deletion of token row and create new , error: {error}")
-        return render_template("login.html", username=username)
-    except Exception as error:
-        flash("An error occurred. Please try again later.", category="error")
-        print(f"Error during login: {error}")
-        return render_template("login.html", username=username)
+        if isinstance(error, DatabaseDuplicationEntryError):
+            print(f"Should handle deletion of token row and create new, error: {error}")
+        return redirect(url_for('index.login', username=username))
 
 
 @bp.route("/signup", methods=["POST"])
@@ -82,10 +79,10 @@ def create_user():
         flash("user created successfully", category="success")
         flash(f"Hey {username}, welcome back", category="message")
         return redirect("/books")
-    except ValueError as error:
+    except EmptyUsernamePassword as error:
         flash(str(error), category="error")
-        return render_template("signup.html")
-    except DatabaseDuplicationEntryError:
+        return redirect(url_for("index.signup"))
+    except DatabaseDuplicationEntryError as error:
         flash("Username or email already exists. Please login.", category="message")
         return redirect(url_for("index.login", username=username))
     except DatabaseOperationError as error:
