@@ -10,7 +10,7 @@ from services.db_service import db_operation
 from services.tokens_service import (
     get_token_from_cookie,
     delete_token,
-    get_token_from_db,
+    get_token_data,
 )
 from datetime import datetime
 
@@ -18,6 +18,12 @@ from datetime import datetime
 def get_user_by_username(username):
     query = "SELECT * FROM users WHERE username = %s"
     user_response = db_operation(query, (username,))
+    return user_response[0] if user_response else None
+
+
+def get_user_by_id(user_id):
+    query = "SELECT * FROM users WHERE id = %s"
+    user_response = db_operation(query, (user_id,))
     return user_response[0] if user_response else None
 
 
@@ -31,7 +37,7 @@ def handle_authenticated(is_guard_check):
         if token is None:
             raise AuthTokenError("Must login first")
 
-        token_data = get_token_from_db(token)
+        token_data = get_token_data(token)
         if not token_data:
             raise AuthTokenError("Auth token is not valid")
 
@@ -39,6 +45,7 @@ def handle_authenticated(is_guard_check):
         if is_token_expired:
             delete_token(token)
             raise AuthTokenError("Token expired, please login again")
+        g.auth_token = token
         return True
     except AuthTokenError as error:
         g.should_remove_auth_token_cookie = True
@@ -71,3 +78,9 @@ def encrypt_decrypt_password(password):
         hashed_char = chr(ord(char) ^ ord(hash_key[i % len(hash_key)]))
         _password += hashed_char
     return _password
+
+
+def get_user_by_token(token):
+    token_data = get_token_data(token)
+    if token_data:
+        return get_user_by_id(token_data["user_id"])

@@ -59,8 +59,3 @@ def delete_token(token):
 def get_token_from_cookie():
     auth_token = request.cookies.get(login_token_cookie_name)
     return auth_token or None
-
-
-def get_token_from_db(token):
-    token_data = get_token_data(token)
-    return token_data or None
