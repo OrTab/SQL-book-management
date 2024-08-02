@@ -34,7 +34,7 @@ def books():
 @bp.route("/login")
 def login():
     if is_authenticated():
-        flash("Auto login , Welcome back")
+        flash("Already logged in, Welcome back")
         return redirect(url_for("index.index"))
     username = request.args.get("username")
     return render_template("login.html", username=username)
@@ -42,6 +42,9 @@ def login():
 
 @bp.route("/signup")
 def signup():
+    if is_authenticated():
+        flash("Already logged in, logout if you want to create new user")
+        return redirect(url_for("index.index"))
     return render_template("signup.html")
 
 

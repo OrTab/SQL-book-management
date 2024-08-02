@@ -1,9 +1,8 @@
-from flask import Blueprint
-
-bp = Blueprint("api", __name__)
+from flask import Blueprint,session
 from config import login_token_cookie_name
 from flask import Blueprint, request, redirect, flash, render_template, url_for
 from services.db_service import db_operation
+from services.users_service import get_user_by_username
 from error_entities.database_duplication_entry_error import DatabaseDuplicationEntryError
 from error_entities.database_operation_error import DatabaseOperationError
 from error_entities.incorrect_username_password_error import IncorrectUsernamePassword
@@ -12,6 +11,9 @@ from services.users_service import (
     encrypt_decrypt_password,
     validate_username_password_existence,is_authenticated
 )
+from services.tokens_service import insert_and_get_token_for_user, set_token_in_cookie,get_token_data_by_user_id,delete_token
+
+bp = Blueprint("api", __name__)
 
 
 @bp.route("/login", methods=["POST"])
@@ -24,44 +26,28 @@ def login():
         username = form_data.get("username")
         password = form_data.get("password")
         validate_username_password_existence(username, password)
-
-        query = "SELECT * FROM users WHERE username = %s"
-        user_response = db_operation(query, (username,))
-        user = user_response[0] if user_response else None
+        user = get_user_by_username(username)
         if not user:
             raise IncorrectUsernamePassword()
 
         decrypted_password = encrypt_decrypt_password(user["password"])
         if decrypted_password != password:
             raise IncorrectUsernamePassword()
-
-        query = """INSERT INTO tokens (id, token, user_id, expiration)
-                    VALUES (UUID(), UUID(), %s, DATE_ADD(NOW(), INTERVAL 1 MONTH))
-                """
-        db_operation(query, (user["id"],))
-        query = """
-            SELECT id, token, expiration
-            FROM tokens
-            WHERE user_id = %s
-        """
-        token_response = db_operation(query, (user["id"],), True)
+        user_id = user["id"]
+        user_token = get_token_data_by_user_id(user_id)        
+        if user_token:
+            delete_token(user_token['token'])
+        token_response = insert_and_get_token_for_user(user_id)
         flash(f"Hey {user["username"]}, welcome back", category="message")
         response = redirect("/books")
-        response.set_cookie(
-            login_token_cookie_name,
-            token_response["token"],
-            expires=token_response["expiration"],
-            httponly=True,
-        )
-        return response
+        return set_token_in_cookie(token_response,response)
 
     except (IncorrectUsernamePassword , EmptyUsernamePassword)as error:
         flash(str(error), category="error")
         return redirect(url_for("index.login", username=username))
     except (DatabaseDuplicationEntryError, Exception) as error:
         flash("An error occurred. Please try again later.", category="error")
-        if isinstance(error, DatabaseDuplicationEntryError):
-            print(f"Should handle deletion of token row and create new, error: {error}")
+        print(f"Error while login, error: {error}")
         return redirect(url_for('index.login', username=username))
 
 
@@ -76,15 +62,22 @@ def create_user():
         user_data = (username, password)
         query = "INSERT INTO users (id, username, password, created_at) VALUES (UUID(), %s, %s, CURRENT_TIMESTAMP)"
         db_operation(query, user_data)
+        user = get_user_by_username(username)
         flash("user created successfully", category="success")
-        flash(f"Hey {username}, welcome back", category="message")
-        return redirect("/books")
+        flash(f"Welcome {username}", category="message")
+        token_response = insert_and_get_token_for_user(user["id"])
+        response = redirect(url_for('index.books'))
+        return set_token_in_cookie(token_response,response)
     except EmptyUsernamePassword as error:
+        session.pop('_flashes', None)
         flash(str(error), category="error")
         return redirect(url_for("index.signup"))
     except DatabaseDuplicationEntryError as error:
+        session.pop('_flashes', None)
         flash("Username or email already exists. Please login.", category="message")
         return redirect(url_for("index.login", username=username))
     except DatabaseOperationError as error:
+        session.pop('_flashes', None)
         flash("An unexpected error occurred. Please try again later.", category="error")
-        return render_template("signup.html")
+        print("Error while create user" , error)
+        return redirect(url_for("index.signup"))

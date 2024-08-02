@@ -1,9 +1,29 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, g
 from routes import index
 from routes.api import auth, books, user
-from config import api_prefix, port, host, hash_key
+from config import (
+    api_prefix,
+    port,
+    host,
+    hash_key,
+)
+from services.tokens_service import remove_token_from_cookie
 
 app = Flask(__name__)
+
+
+@app.before_request
+def handle_before_request():
+    g.should_remove_auth_token_cookie = False
+
+
+@app.after_request
+def handle_after_request(response):
+    if g.should_remove_auth_token_cookie:
+        response = remove_token_from_cookie(response)
+    return response
+
+
 app.secret_key = hash_key
 
 # main routes

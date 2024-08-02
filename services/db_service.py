@@ -32,6 +32,7 @@ class MySQLConnection:
             self.cursor.close()
         if self.db_connection and self.db_connection.is_connected():
             self.db_connection.close()
+        print(f"Database {db_name} closed successfully")
 
 
 def db_operation(query, params=None, should_fetch_one=False):
