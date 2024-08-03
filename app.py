@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory, g
+from flask import Flask, render_template, send_from_directory, g, request
 from routes import index
 from routes.api import auth, books, user
 from config import (
@@ -15,11 +15,13 @@ app = Flask(__name__)
 
 @app.before_request
 def handle_before_request():
+    g.should_remove_auth_token_cookie = False
+    if request.url.startswith("/static"):
+        return
     if is_authenticated():
         user = get_user_by_token(g.auth_token)
         if user:
             g.user = user
-    g.should_remove_auth_token_cookie = False
 
 
 @app.after_request
