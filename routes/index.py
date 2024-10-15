@@ -6,9 +6,10 @@ from flask import (
     request,
     flash,
     url_for,
+    g,
 )
 from services.books_service import get_books_from_db
-from services.users_service import requires_authentication, is_authenticated
+from services.users_service import requires_authentication
 
 
 bp = Blueprint("index", __name__)
@@ -33,7 +34,7 @@ def books():
 
 @bp.route("/login")
 def login():
-    if is_authenticated():
+    if g.user:
         flash("Already logged in, Welcome back")
         return redirect(url_for("index.index"))
     username = request.args.get("username")
@@ -42,7 +43,7 @@ def login():
 
 @bp.route("/signup")
 def signup():
-    if is_authenticated():
+    if g.user:
         flash("Already logged in, logout if you want to create new user")
         return redirect(url_for("index.index"))
     return render_template("signup.html")
